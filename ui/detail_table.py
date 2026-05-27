@@ -13,7 +13,10 @@ def render_detail_table(df: pd.DataFrame) -> None:
     formatters = _build_formatters(df)
     styled = df.style.format(formatters, na_rep="")
     if "Age" in df.columns:
-        styled = styled.applymap(_age_style, subset=["Age"])
+        if hasattr(styled, "map"):
+            styled = styled.map(_age_style, subset=["Age"])
+        else:
+            styled = styled.applymap(_age_style, subset=["Age"])
 
     st.dataframe(styled, height=600, use_container_width=True, hide_index=True)
 
