@@ -21,6 +21,19 @@ class ReaderTests(unittest.TestCase):
 		df.to_excel(buffer, index=False, engine="openpyxl")
 		return UploadedBytes(buffer.getvalue(), name)
 
+	def _make_upload_with_header_offset(self, headers: list, rows: list, name: str) -> UploadedBytes:
+		from openpyxl import Workbook
+
+		workbook = Workbook()
+		worksheet = workbook.active
+		worksheet.append(["Report title"])
+		worksheet.append(headers)
+		for row in rows:
+			worksheet.append(row)
+		buffer = io.BytesIO()
+		workbook.save(buffer)
+		return UploadedBytes(buffer.getvalue(), name)
+
 	def test_load_trims_headers_and_adds_missing_optional(self) -> None:
 		df = pd.DataFrame(
 			{
@@ -46,6 +59,15 @@ class ReaderTests(unittest.TestCase):
 
 		with self.assertRaises(ValueError):
 			reader.load(upload)
+
+	def test_load_header_on_second_row(self) -> None:
+		headers = ["Item#", "Item name", "Age", "Opening qty", "Closing qty"]
+		rows = [["A001", "Item A", 400, 10, 10]]
+		upload = self._make_upload_with_header_offset(headers, rows, "offset.xlsx")
+
+		df_out, _ = reader.load(upload)
+		self.assertIn("Item#", df_out.columns)
+		self.assertEqual(len(df_out), 1)
 
 
 class FilterTests(unittest.TestCase):
