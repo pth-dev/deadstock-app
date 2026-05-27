@@ -1,0 +1,6 @@
+__pycache__/
+*.xls
+*.xlsx
+.env
+venv/
+tests/sample_data.xlsx
